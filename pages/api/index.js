@@ -3,6 +3,8 @@ import { BlobServiceClient } from '@azure/storage-blob';
 const redisClient = require('./redis');
 const { Client } = require('@notionhq/client');
 require('dotenv').config();
+import { NotionAPI } from 'notion-client'
+
 
 // Initializing the cors middleware
 const cors = Cors({
@@ -12,6 +14,11 @@ const cors = Cors({
 // Initialize Notion client
 const notion = new Client({
   auth: process.env.NOTION_TOKEN,
+});
+
+const notionAPI = new NotionAPI({
+  activeUser: process.env.NOTION_ACTIVE_USER,
+  authToken: process.env.NOTION_AUTH_TOKEN,
 });
 
 // Initialize Azure Blob Storage client
@@ -92,21 +99,11 @@ async function fetchPostFromNotion(slug) {
     }
   });
   const page = database.results[0];
-  let blocks = await notion.blocks.children.list({ block_id: page.id });
-  if (blocks.has_more) {
-    while (true) {
-      let moreBlocks = await notion.blocks.children.list({ block_id: page.id, start_cursor: blocks.next_cursor });
-      blocks.results.push(...moreBlocks.results);
-
-      if (!moreBlocks.has_more) {
-        break; // Exit the loop if there are no more blocks
-      }
-    }
-  }
+  const recordMap = await notionAPI.getPage(page.id);
 
   return {
     page,
-    blocks: blocks.results,
+    recordMap: recordMap,
   };
 }
 
