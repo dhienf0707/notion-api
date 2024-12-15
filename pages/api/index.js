@@ -124,7 +124,7 @@ async function fetchPostsFromNotion() {
     date: page.last_edited_time || '',
     description: page.properties.Description?.rich_text[0]?.plain_text || '',
     slug: page.properties.Slug?.rich_text[0]?.plain_text || '',
-    cover_img: page.cover?.file.url || '',
+    cover_img: page.properties.cover?.rich_text[0]?.plain_text || '',
   }));
 
   return posts;
